@@ -1,71 +1,138 @@
----
-title: Introduction
-description: "Welcome to the home of your new documentation"
----
+# Chat App Build Kit v1
 
-<img
-  className="block dark:hidden"
-  src="/images/hero-light.png"
-  alt="Hero Light"
-/>
-<img
-  className="hidden dark:block"
-  src="/images/hero-dark.png"
-  alt="Hero Dark"
-/>
+## Tutorial:
 
-## Setting up
+[https://youtu.be/DtEzxCweIuA?si=v1edli6lKud1MSc0](https://youtu.be/DtEzxCweIuA?si=v1edli6lKud1MSc0)
 
-The first step to world-class documentation is setting up your editing environments.
+## Placeholder template:
 
-<CardGroup cols={2}>
-  <Card
-    title="Edit Your Docs"
-    icon="pen-to-square"
-    href="https://mintlify.com/docs/quickstart"
-  >
-    Get your docs set up locally for easy development
-  </Card>
-  <Card
-    title="Preview Changes"
-    icon="image"
-    href="https://mintlify.com/docs/development"
-  >
-    Preview your changes before you push to make sure they're perfect
-  </Card>
-</CardGroup>
+```
+[https://app.flutterflow.io/project/chat-app-v1-0cs2aq](https://app.flutterflow.io/project/chat-app-v1-0cs2aq)
+```
 
-## Make it yours
+## Schema:
 
-Update your docs to your brand and add valuable content for the best user conversion.
+```bash
+chatRooms
+|-- {chatRoomId}
+    |-- chatRoomId: String
+    |-- type: String  // "dm" or "group"
+    |-- createdAt: Timestamp
+    |-- members: List<String>
+    |-- lastMessage
+        |-- senderId: String
+        |-- message: String
+        |-- timestamp: Timestamp
+    ||-- messages
+        |-- {messageId}
+            |-- messageId: String
+            |-- senderId: String
+            |-- message: String
+            |-- timestamp: Timestamp
+            |-- type: String  // "text", "image", "file"
+            |-- mediaUrl: String  // Optional, if type is not 'text'
+```
 
-<CardGroup cols={2}>
-  <Card
-    title="Customize Style"
-    icon="palette"
-    href="https://mintlify.com/docs/settings/global"
-  >
-    Customize your docs to your company's colors and brands
-  </Card>
-  <Card
-    title="Reference APIs"
-    icon="code"
-    href="https://mintlify.com/docs/api-playground/openapi"
-  >
-    Automatically generate endpoints from an OpenAPI spec
-  </Card>
-  <Card
-    title="Add Components"
-    icon="screwdriver-wrench"
-    href="https://mintlify.com/docs/content/components/accordions"
-  >
-    Build interactive features and designs to guide your users
-  </Card>
-  <Card
-    title="Get Inspiration"
-    icon="stars"
-    href="https://mintlify.com/customers"
-  >
-    Check out our showcase of our favorite documentation
-  </Card>
-</CardGroup>
+## Datatypes:
+
+1) Datatype Name: 
+
+```json
+Test
+```
+
+```json
+{
+"messageId": "string",
+"senderId": "string",
+"message": "string",
+"timestamp": "timestamp",
+"type": "string",
+"mediaUrl": "string"
+}
+```
+
+## Custom Code:
+
+### Custom Functions:
+
+****Replace the actual code with the commented line  // placeholder text****
+
+### 1) clearSpace
+
+```dart
+  // clear the unwanted space and empty rows in the passed text ans return it
+  return text.replaceAll(RegExp(r'\s+'), ' ').trim();
+```
+
+### Custom Actions:
+
+****Replace the Boilerplate code with the below code****
+
+### 1) updateMessageStatus
+
+```dart
+import 'package:cloud_firestore/cloud_firestore.dart';
+
+Future<bool> updateMessageStatus(
+  DocumentReference parentRef,
+  DocumentReference userRef,
+) async {
+  try {
+    // Navigate to the messages_group subcollection
+    CollectionReference messagesGroup = parentRef.collection('messages_group');
+
+    // Fetch all documents from messages_group
+    QuerySnapshot allDocs = await messagesGroup.get();
+
+    // Use a batch to perform multiple updates
+    final WriteBatch batch = FirebaseFirestore.instance.batch();
+
+    for (QueryDocumentSnapshot doc in allDocs.docs) {
+      // Extract chat_messages which is a list of maps
+      List<Map<String, dynamic>> chatMessages =
+          List<Map<String, dynamic>>.from(doc['chat_messages'] ?? []);
+
+      bool needsUpdate = false;
+
+      // Loop through each message and check if the user does NOT match and message_status is false
+      for (var message in chatMessages) {
+        if (message['user'] != userRef && message['message_status'] == false) {
+          message['message_status'] = true; // Update the message_status to true
+          needsUpdate = true;
+        }
+      }
+
+      // If any message_status was updated, then update the document
+      if (needsUpdate) {
+        batch.update(doc.reference, {'chat_messages': chatMessages});
+      }
+    }
+
+    // Commit the batch
+    await batch.commit();
+
+    // If everything went well, return true
+    return true;
+  } catch (e) {
+    // If there was an exception, return false
+    return false;
+  }
+}
+```
+
+## Components:
+
+### 1) PasswordStrength
+
+```json
+CAEShApDaEpEYjI1MFlXbHVaWEpmTm5WM2RIWm1OR3NTMUFZS0RGSnZkMTloYWpKMGJuQjNkUktMQWdvU1EyOXVkR0ZwYm1WeVgzRnBkR3B0TnpnMkdBRWk3UUVLWmdvV0Nna0pBQUFBQUFBQVdVQVNDUWtBQUFBQUFBQlpRQkk3RWk4SkFBQUFBQUFBS0VBUkFBQUFBQUFBS0VBWkFBQUFBQUFBS0VBaEFBQUFBQUFBS0VBb0FqRUFBQUFBQUFBb1FFSUNFQVZhQUdJQ0VBRWlBRGdCUUFKSkFBQUFBQUFBV1VCU0FIb0NHQUdhQVc4S0F3RUNDQ3BvQ0FveUJCb0NFQVZTWGpwY0NrNEtSQWdLVWtBU014SXhDQU5DRmpJVUNoSUtDSE4wY21WdVozUm9FZ1p4Wld0bWFXbUNBUlFLRWtOdmJuUmhhVzVsY2w5eWNIaDZjMngwY3hJRkNnTVNBVE1pQWdnR0VnWUtCQm9DRUEwU0Jnb0VHZ0lRQlJvQ0VCYjZBd0R5QlFrSkFBQUFBQUFBOEQ5aUFNSUJBQktJQWdvU1EyOXVkR0ZwYm1WeVgzUnBOSFkwWlRSeUdBRWk3UUVLWmdvV0Nna0pBQUFBQUFBQVdVQVNDUWtBQUFBQUFBQlpRQkk3RWk4SkFBQUFBQUFBS0VBUkFBQUFBQUFBS0VBWkFBQUFBQUFBS0VBaEFBQUFBQUFBS0VBb0FqRUFBQUFBQUFBb1FFSUNFQVZhQUdJQ0VBRWlBRGdCUUFKSkFBQUFBQUFBV1VCU0FIb0NHQUdhQVc4S0F3RUNDQ3BvQ0FveUJCb0NFQVZTWGpwY0NrNEtSQWdLVWtBU014SXhDQU5DRmpJVUNoSUtDSE4wY21WdVozUm9FZ1p4Wld0bWFXbUNBUlFLRWtOdmJuUmhhVzVsY2w5eWNIaDZjMngwY3hJRkNnTVNBVFlpQWdnR0VnWUtCQm9DRUEwU0Jnb0VHZ0lRQlJvQ0VCYjZBd0R5QlFrSkFBQUFBQUFBOEQ5aUFCS0lBZ29TUTI5dWRHRnBibVZ5WDJ4d01IRjBNbXQyR0FFaTdRRUtaZ29XQ2drSkFBQUFBQUFBV1VBU0NRa0FBQUFBQUFCWlFCSTdFaThKQUFBQUFBQUFLRUFSQUFBQUFBQUFLRUFaQUFBQUFBQUFLRUFoQUFBQUFBQUFLRUFvQWpFQUFBQUFBQUFvUUVJQ0VBVmFBR0lDRUFFaUFEZ0JRQUpKQUFBQUFBQUFXVUJTQUhvQ0dBR2FBVzhLQXdFQ0NDcG9DQW95QkJvQ0VBVlNYanBjQ2s0S1JBZ0tVa0FTTXhJeENBTkNGaklVQ2hJS0NITjBjbVZ1WjNSb0VnWnhaV3RtYVdtQ0FSUUtFa052Ym5SaGFXNWxjbDl5Y0hoNmMyeDBjeElGQ2dNU0FUa2lBZ2dHRWdZS0JCb0NFQTBTQmdvRUdnSVFCUm9DRUJiNkF3RHlCUWtKQUFBQUFBQUE4RDlpQUJnRElod2FDeW9KQ1FBQUFBQUFBQlJBK2dNQThnVUpDUUFBQUFBQUFQQS9ZZ0FZQVNKUENqRUtGZ29KQ1FBQUFBQUFBUEIvRWdrSkFBQUFBQUFBSkVBU0NrSUNFQVphQUdJQ0VBRWlBRWtBQUFBQUFBQlpRRklBV2dzNUFBQUFBQUFBQUFCQUF2b0RBUElGQ1FrQUFBQUFBQUR3UDJJQXdnRUE=
+```
+
+### 2) Footer
+
+```json
+CAESkAhDZzlEYjJ4MWJXNWZPSEZ2YTI0MVpXWVNkQW9TUTI5dWRHRnBibVZ5WHpRNWNqaHFhR2wyR0FFaVRnbzlDaFlLQ1FrQUFBQUFBQUR3ZnhJSkNRQUFBQUFBQVBBL0VoWkNEaG9NUkdsMmFXUmxjaUJNYVc1bFdnQmlBaEFCSWdCSkFBQUFBQUFBV1VCU0FQb0RBUElGQ1FrQUFBQUFBQUR3UHpvSFJHbDJhV1JsY21JQXdnRUFFdGNFQ2hKRGIyNTBZV2x1WlhKZmNtMXdkR3h2ZURFUzhnTUtERkp2ZDE5eE1EVm9jMk4wYlJKdENnMVVaWGgwWDNwaWMyYzBPR3gxR0FJaVdCSVNDZ2ZDcVNBeU1ESXpPZ0lRQ0VBR3FBRUFtZ0V5Q2dJQ0FTb3NDQXBTS0FvQUVnY0tCUklEd3FrZ0Voc1NHUWdCTWdZU0JESXdNak5DQkJvQ0NBRktCMG9GQ2dGNUdBSDZBd0R5QlFrSkFBQUFBQUFBOEQ5aUFCS2hBZ29SVW1samFGUmxlSFJmYTJaaGNqVjNkR2NTVFFvVlVtbGphRlJsZUhSVGNHRnVYMms0Y0dweU9IaHZHRkVpTU1vRklRb2ZDaGxFWlhOcFoyNWxaQ0IzYVhSb0lPS2RwTys0anlCaWVTQWdPZ0lRQ1BJRkNRa0FBQUFBQUFEd1AySUFFcDBCQ2hWU2FXTm9WR1Y0ZEZOd1lXNWZNR3R2WldjNE1ta1lVU0pGeWdVMkNqUUtDMEZzWm1Ga1pYTnRaWFJoRVFBQUFBQUFBREpBR2daQ2JHRnVhMkU2QmdpQWdJRDREMEFFYUFHWkFRQUFBQUFBQUFCQThnVUpDUUFBQUFBQUFQQS9ZZ0NLQVRnU01nb0lkVGwyZG1wNU1XSVNKaW9aQ2hkb2RIUndPaTh2YldOdFlXTnJiV1ZrYVdFdVkyOXRMNm9DQ0dvMll6ZHpjRFk1R2dJSUFSaFFJaGI2QXdEQ0JRUUtBa0FHOGdVSkNRQUFBQUFBQVBBL1lnRENBUUFZQXlKSUdnWUlBUkFGS2dCYUx3a0FBQUFBQUFBMFFCRUFBQUFBQUFBMFFCa0FBQUFBQUFBMFFDRUFBQUFBQUFBMFFEa0FBQUFBQUFBMFFFQUMrZ01BOGdVSkNRQUFBQUFBQVBBL1lnRENBUUFZQVNKQUNpSUtDd29KQ1FBQUFBQUFBUEIvRWdaYUFHSUNFQUVpQUVrQUFBQUFBQUJaUUZJQVdnc1JBQUFBQUFBQUpFQkFBZm9EQVBJRkNRa0FBQUFBQUFEd1B6b0dSbTl2ZEdWeVlnQVlCQ0lpSWdRSUFUSUFXZ3M1QUFBQUFBQUFBQUJBQXZvREFQSUZDUWtBQUFBQUFBRHdQMklBd2dFQQ==
+```
+
+© 2024 Nocode Cart. All rights reserved.
